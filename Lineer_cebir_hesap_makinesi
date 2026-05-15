@@ -119,7 +119,7 @@ void toplam() {
     int **m1 = matrisi_al();
     int **m2 = matrisi_al2();
     if (m1 == NULL || m2 == NULL || satır != satır2 || sütun != sütun2) {
-        printf("Boyutlar uyumsuz veya hata oluş!\n");
+        printf("Boyutlar uyumsuz veya hata oluştu.\n");
     } else {
         printf("Toplama işlemi gerçekleştiriliyor...\n");
         for (int i = 0; i < satır; i++) {
@@ -169,7 +169,7 @@ void çarpım() {
     int **m1 = matrisi_al();
     int **m2 = matrisi_al2();
     if (m1 == NULL || m2 == NULL || sütun != satır2) {
-        printf("Hata: Matris boyutları çarpım için uygun değil!.n");
+        printf("Hata: Matris boyutları çarpım için uygun değil.\n");
         return;
     }
 
