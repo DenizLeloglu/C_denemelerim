@@ -118,7 +118,7 @@ void toplam() {
     int **m1 = matrisi_al();
     int **m2 = matrisi_al2();
     if (m1 == NULL || m2 == NULL || satır != satır2 || sütun != sütun2) {
-        printf("Boyutlar uyumsuz veya hata oluştu!\n");
+        printf("Boyutlar uyumsuz veya hata oluştu.\n");
     } else {
         printf("Toplama işlemi gerçekleştiriliyor...\n");
         for (int i = 0; i < satır; i++) {
@@ -168,7 +168,7 @@ void çarpım() {
     int **m1 = matrisi_al();
     int **m2 = matrisi_al2();
     if (m1 == NULL || m2 == NULL || sütun != satır2) {
-        printf("Hata: Matris boyutları çarpım için uygun değil!\n");
+        printf("Hata: Matris boyutları çarpım için uygun değil.\n");
         return;
     }
 
@@ -202,7 +202,7 @@ void çarpım() {
 void determinant() {
     int **m1 = matrisi_al();
     if (m1 == NULL || satır != sütun) {
-        printf("Hata: Determinant için kare matris gereklidir!\n");
+        printf("Hata: Determinant hesaplamak için kare matris gereklidir.\n");
         return;
     }
     else {
@@ -266,7 +266,7 @@ void vektör_açısı() {
         double uzunluk_v2 = sqrt(v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2]);
 
         if (uzunluk_v1 == 0 || uzunluk_v2 == 0) {
-            printf("Hata: Uzunluğu sıfır olan bir vektör!\n");
+            printf("Hata: Uzunluğu sıfır olan bir vektör girdiniz.\n");
             free(v1);
             free(v2);
             return;
@@ -290,7 +290,7 @@ void skaler() {
     double *v1 = vektör_al();
     double *v2 = vektör_al();
     if (v1 == NULL || v2 == NULL) {
-        printf("Hata: Vektörler alınamadı!\n");
+        printf("Hata: Vektörler alınamadı.\n");
         return;
     }else {
         double skaler = v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
@@ -305,7 +305,7 @@ void vektörel() {
     double *v1 = vektör_al();
     double *v2 = vektör_al();
     if (v1 == NULL || v2 == NULL) {
-        printf("Hata: Vektörler alınamadı!\n");
+        printf("Hata: Vektörler alınamadı.\n");
         return;
     }else {
         double vektörel_x = v1[1] * v2[2] - v1[2] * v2[1];
