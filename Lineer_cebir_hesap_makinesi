@@ -105,9 +105,9 @@ int **matrisi_al2() {
             scanf("%d", &matris[i][j]);
         }
     }
-    printf("\n--- Girilen Matris Onayi ---\n");
-    for (int i = 0; i < satır; i++) {
-        for (int j = 0; j < sütun; j++) {
+    printf("\n--- Girilen Matris ---\n");
+    for (int i = 0; i < satır2; i++) {
+        for (int j = 0; j < sütun2; j++) {
             printf("%d\t", matris[i][j]);
         }
         printf("\n");
