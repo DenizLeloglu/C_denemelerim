@@ -1,0 +1,64 @@
+#include <stdio.h>
+#include <math.h>
+#define TUREV_ADIMI 0.0001
+void tamponu_temizle();
+double yayılma( double t, double nüfus);
+double yayılma_hızı(double t,double nüfus);
+double yayılma_ivme(double t, double nüfus);
+
+int main() {
+    double min_t=0.0;
+    double max_t;
+    double zirve_günü = 0.0;
+    double maksimum_hız = -1.0;
+    double ikinci_türev = 999999.0;
+    double nüfus;
+    printf("Lojistik Büyüme Fonksiyonuna Hoşgeldiniz\n");
+    printf("-------------------------------------------\n");
+    printf("Lütfen nüfusu giriniz: ");
+    if (scanf("%lf", &nüfus) !=1) {
+        printf("Geçersiz giriş! Lütfen bir sayı giriniz.\n");
+        return 1;
+    }
+    if (nüfus < 0) {
+        printf("Nüfus negatif olamaz! Lütfen pozitif bir sayı giriniz.\n");
+        return 1;
+    }
+    tamponu_temizle();
+    printf("Lütfen Hesaplanmasını İstediğiniz Son Günü Giriniz: ");
+    if (scanf("%lf", &max_t) !=1) {
+        printf("Geçersiz giriş! Lütfen bir sayı giriniz.\n");
+        return 1;
+    }
+    tamponu_temizle();
+    for (double t = min_t; t <= max_t; t += TUREV_ADIMI) {
+        double mevcut_hiz = yayılma_hızı(t,nüfus);
+        double mevcut_ivme = yayılma_ivme(t,nüfus);
+        if (fabs(mevcut_ivme) < ikinci_türev && mevcut_hiz > maksimum_hız) {
+            ikinci_türev = fabs(mevcut_ivme);
+            zirve_günü = t;
+            maksimum_hız = mevcut_hiz;
+
+        }
+    }
+    printf("Yayılımın en agresif olduğu (Zirve) an: %.2f. gün\n", zirve_günü);
+    printf("Zirve günündeki günlük yeni katılan kişi sayısı: %.0f kişi/gün\n", maksimum_hız);
+    printf("Zirve gününde uygulamayı indiren toplam kişi sayısı: %.0f kişi\n", yayılma(zirve_günü, nüfus));
+    printf("Zirve anındaki hız değişimi (Hedef 0): %.5f\n", yayılma_ivme(zirve_günü, nüfus));
+    return 0;
+}
+double yayılma( double t, double nüfus) {
+    return (nüfus/(1+(exp(-0.5 *(t-10)))));
+
+}
+double yayılma_hızı(double t, double nüfus) {
+    return(yayılma(t+TUREV_ADIMI, nüfus) - yayılma(t, nüfus))/TUREV_ADIMI;
+}
+double yayılma_ivme(double t, double nüfus) {
+    return (yayılma_hızı(t+TUREV_ADIMI, nüfus) - yayılma_hızı(t, nüfus))/TUREV_ADIMI;
+}
+void tamponu_temizle() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) {
+    }
+}
