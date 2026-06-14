@@ -1,0 +1,175 @@
+#define F_CPU 16000000UL
+#include <avr/io.h>
+#include <util/delay.h>
+#include <avr/interrupt.h>
+#include <stdio.h>
+
+#define LCD_ADDR 0x27
+
+#define RS 0  
+#define RW 1  
+#define EN 2  
+#define BL 3  
+
+// --- zamanlama ---
+volatile uint32_t ms_sayaci = 0;
+
+ISR(TIMER0_OVF_vect) {
+    ms_sayaci++;
+    TCNT0 = 6;
+}
+
+void Timer0_Init(void) {
+    TCCR0B |= (1 << CS01) | (1 << CS00); 
+    TIMSK0 |= (1 << TOIE0);              
+    TCNT0 = 6;
+    sei();                              
+}
+
+// --- TWI ---
+void I2C_Init(void) {
+    TWBR = 72; [cite: 1]
+    TWSR = 0;  [cite: 2]
+}
+
+void I2C_Start(void) {
+    TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN); [cite: 2, 3]
+    while (!(TWCR & (1 << TWINT))); [cite: 3]
+}
+
+void I2C_Stop(void) {
+    TWCR = (1 << TWINT) | (1 << TWSTO) | (1 << TWEN); [cite: 3, 4]
+}
+
+void I2C_Write(uint8_t data) {
+    TWDR = data; [cite: 4, 5]
+    TWCR = (1 << TWINT) | (1 << TWEN); [cite: 5]
+    while (!(TWCR & (1 << TWINT))); [cite: 5]
+}
+
+// --- LCD ---
+void LCD_Send(uint8_t data, uint8_t mode) {
+    uint8_t high_nibble = (data & 0xF0) | (1 << BL) | mode; [cite: 6, 7]
+    uint8_t low_nibble = ((data << 4) & 0xF0) | (1 << BL) | mode; [cite: 7]
+
+    I2C_Start(); [cite: 7]
+    I2C_Write(LCD_ADDR << 1); [cite: 8]
+    I2C_Write(high_nibble | (1 << EN)); [cite: 8]
+    _delay_us(1); [cite: 8]
+    I2C_Write(high_nibble & ~(1 << EN)); [cite: 8]
+    _delay_us(50); [cite: 8]
+
+    I2C_Write(low_nibble | (1 << EN)); [cite: 8]
+    _delay_us(1); [cite: 9]
+    I2C_Write(low_nibble & ~(1 << EN)); [cite: 9]
+    _delay_us(50); [cite: 9]
+    I2C_Stop(); [cite: 9]
+}
+
+void LCD_Init(void) {
+    _delay_ms(50); [cite: 9]
+    LCD_Send(0x33, 0); [cite: 9] 
+    LCD_Send(0x32, 0); [cite: 9]
+    LCD_Send(0x28, 0); [cite: 10] 
+    LCD_Send(0x0C, 0); [cite: 10] 
+    LCD_Send(0x01, 0); [cite: 10] 
+    _delay_ms(2); [cite: 10]
+}
+
+void LCD_Print(char *str) {
+    while (*str) { [cite: 10]
+        LCD_Send(*str++, (1 << RS)); [cite: 10]
+    } [cite: 11]
+}
+
+// --- ADC ---
+void ADC_Init(void) {
+    ADMUX = (1 << REFS0); 
+    ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0); 
+}
+
+uint16_t ADC_Oku(void) {
+    ADCSRA |= (1 << ADSC); 
+    while (ADCSRA & (1 << ADSC)); 
+    return ADC;
+}
+
+// --- Keypad ---
+void Keypad_Init(void) {
+    DDRB |= 0x0F;   
+    PORTB |= 0x0F;  
+    
+    DDRD &= ~0x3C;  
+    PORTD |= 0x3C; 
+}
+
+char Keypad_Tara(void) {
+    char tuslar[4][4] = {
+        {'1', '2', '3', 'A'},
+        {'4', '5', '6', 'B'},
+        {'7', '8', '9', 'C'},
+        {'*', '0', '#', 'D'}
+    };
+    
+    for (uint8_t r = 0; r < 4; r++) {
+        PORTB = (PORTB | 0x0F) & ~(1 << r); 
+        _delay_us(5); 
+        
+       
+        for (uint8_t c = 0; c < 4; c++) {
+            if (!(PIND & (1 << (c + 2)))) { 
+                while (!(PIND & (1 << (c + 2)))); 
+                return tuslar[r][c]; 
+            }
+        }
+    }
+    return 0; 
+}
+
+
+int main(void) {
+    I2C_Init(); [cite: 11]
+    LCD_Init(); [cite: 11]
+    Timer0_Init();
+    ADC_Init();
+    Keypad_Init();
+
+    uint32_t son_adc_zamani = 0;
+    uint32_t son_keypad_zamani = 0;
+    
+    char lcd_tampon[16];
+    char son_basilan_tus = ' ';
+
+   
+    LCD_Send(0x01, 0); 
+    _delay_ms(2);
+
+    while (1) { [cite: 11, 12]
+        uint32_t su_anki_zaman = ms_sayaci;
+
+       
+        if (su_anki_zaman - son_adc_zamani >= 300) {
+            uint16_t analog_veri = ADC_Oku();
+            
+            sprintf(lcd_tampon, "Volt: %4d     ", analog_veri);
+            LCD_Send(0x80, 0);
+            LCD_Print(lcd_tampon);
+            
+            son_adc_zamani = su_anki_zaman;
+        }
+
+        
+        if (su_anki_zaman - son_keypad_zamani >= 40) {
+            char tus = Keypad_Tara();
+            if (tus != 0) {
+                son_basilan_tus = tus;
+                
+                sprintf(lcd_tampon, "Basilan: %c      ", son_basilan_tus);
+                LCD_Send(0xC0, 0); // 2. satırın başına git
+                LCD_Print(lcd_tampon);
+            }
+            son_keypad_zamani = su_anki_zaman;
+        }
+    }
+    return 0; [cite: 13]
+}
